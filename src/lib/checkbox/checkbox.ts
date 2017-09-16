@@ -65,7 +65,7 @@ export const _MdCheckboxMixinBase =
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MdCheckbox extends MdCheckboxBase implements ControlValueAccessor{
+export class MdCheckbox extends _MdCheckboxMixinBase implements ControlValueAccessor{
    
     /** The native `<input type="checkbox"> element */
     @ViewChild('input') _inputElement: ElementRef;
@@ -74,12 +74,15 @@ export class MdCheckbox extends MdCheckboxBase implements ControlValueAccessor{
     @Input() name: string | null = null;
 
     /**
-     * Called when the checkbox is blurred. Needed to properly implement ControlValueAccessor.
-     * @docs-private
-     */
+    * Called when the checkbox is blurred. Needed to properly implement ControlValueAccessor.
+    * @docs-private
+    */
     onTouched: () => any = () => {};
     
+
     private _currentAnimationClass: string = '';
+
+    private _currentCheckState: TransitionCheckState = TransitionCheckState.Init;
 
     private _checked: boolean = false;
 
@@ -87,14 +90,13 @@ export class MdCheckbox extends MdCheckboxBase implements ControlValueAccessor{
 
     private _controlValueAccessorChangeFn: (value: any) => void = () => {};
 
-    constructor(renderer: Renderer2,
-              elementRef: ElementRef) {
+    constructor(renderer: Renderer2, elementRef: ElementRef) {
       super(renderer, elementRef);
     }
 
     /**
-     * Whether the checkbox is checked.
-     */
+    * Whether the checkbox is checked.
+    */
     @Input() get checked() {
       return this._checked;
     }
@@ -111,7 +113,6 @@ export class MdCheckbox extends MdCheckboxBase implements ControlValueAccessor{
      * @param value Value to be set to the model.
      */
     writeValue(value: any) {
-      console.log('this', this)
       this.checked = !!value;
     }
 
@@ -168,31 +169,32 @@ export class MdCheckbox extends MdCheckboxBase implements ControlValueAccessor{
     }
   }
 
-    // private _transitionCheckState(newState: TransitionCheckState) {
-    private _transitionCheckState() {
-      // let oldState = this._currentCheckState;
-      // let renderer = this._renderer;
-      // let elementRef = this._elementRef;
+    private _transitionCheckState(newState: TransitionCheckState) {
+      let oldState = this._currentCheckState;
+      let renderer = this._renderer;
+      let elementRef = this._elementRef;
 
-      // if (oldState === newState) {
-      //   return;
-      // }
-      // if (this._currentAnimationClass.length > 0) {
-      //   renderer.removeClass(elementRef.nativeElement, this._currentAnimationClass);
-      // }
+      if (oldState === newState) {
+        return;
+      }
+      if (this._currentAnimationClass.length > 0) {
+        renderer.removeClass(elementRef.nativeElement, this._currentAnimationClass);
+      }
 
-      // this._currentAnimationClass = this._getAnimationClassForCheckStateTransition(
-      //     oldState, newState);
-      // this._currentCheckState = newState;
+      this._currentAnimationClass = this._getAnimationClassForCheckStateTransition(
+          oldState, newState);
+      this._currentCheckState = newState;
 
-      // if (this._currentAnimationClass.length > 0) {
-      //   renderer.addClass(elementRef.nativeElement, this._currentAnimationClass);
-      // }
+      console.log('this._currentAnimationClass', this._currentAnimationClass)
+
+      if (this._currentAnimationClass.length > 0) {
+        renderer.addClass(elementRef.nativeElement, this._currentAnimationClass);
+      }
     }
 
     /** Toggles the `checked` state of the checkbox. */
     toggle(): void {
-      // this.checked = !this.checked;
+      this.checked = !this.checked;
     }
 
    /**
@@ -224,13 +226,46 @@ export class MdCheckbox extends MdCheckboxBase implements ControlValueAccessor{
       // }
 
       this.toggle();
-      // this._transitionCheckState(
-      //   this._checked ? TransitionCheckState.Checked : TransitionCheckState.Unchecked);
+      this._transitionCheckState(
+        this._checked ? TransitionCheckState.Checked : TransitionCheckState.Unchecked);
 
       // Emit our custom change event if the native input emitted one.
       // It is important to only emit it, if the native input triggered one, because
       // we don't want to trigger a change event, when the `checked` variable changes for example.
       // this._emitChangeEvent();
     // }
+  }
+
+  private _getAnimationClassForCheckStateTransition(
+      oldState: TransitionCheckState, newState: TransitionCheckState): string {
+    let animSuffix: string = '';
+
+    switch (oldState) {
+      case TransitionCheckState.Init:
+        // Handle edge case where user interacts with checkbox that does not have [(ngModel)] or
+        // [checked] bound to it.
+        if (newState === TransitionCheckState.Checked) {
+          animSuffix = 'unchecked-checked';
+        } else if (newState == TransitionCheckState.Indeterminate) {
+          animSuffix = 'unchecked-indeterminate';
+        } else {
+          return '';
+        }
+        break;
+      case TransitionCheckState.Unchecked:
+        animSuffix = newState === TransitionCheckState.Checked ?
+            'unchecked-checked' : 'unchecked-indeterminate';
+        break;
+      case TransitionCheckState.Checked:
+        animSuffix = newState === TransitionCheckState.Unchecked ?
+            'checked-unchecked' : 'checked-indeterminate';
+        break;
+      case TransitionCheckState.Indeterminate:
+        animSuffix = newState === TransitionCheckState.Checked ?
+            'indeterminate-checked' : 'indeterminate-unchecked';
+        break;
+    }
+
+    return `mat-checkbox-anim-${animSuffix}`;
   }
 }

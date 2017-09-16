@@ -162,12 +162,12 @@ $_mat-checkbox-item-spacing: $mat-toggle-padding;
 //   }
 // }
 
-// // Applied to elements that are considered "marks" within the checkbox, e.g. the checkmark and
-// // the mixedmark.
-// %mat-checkbox-mark {
-//   $width-padding-inset: 2 * $mat-checkbox-border-width;
-//   width: calc(100% - #{$width-padding-inset});
-// }
+// Applied to elements that are considered "marks" within the checkbox, e.g. the checkmark and
+// the mixedmark.
+%mat-checkbox-mark {
+  $width-padding-inset: 2 * $mat-checkbox-border-width;
+  width: calc(100% - #{$width-padding-inset});
+}
 
 // Applied to elements that appear to make up the outer box of the checkmark, such as the frame
 // that contains the border and the actual background element that contains the marks.
@@ -246,12 +246,12 @@ $_mat-checkbox-item-spacing: $mat-toggle-padding;
               opacity $mat-checkbox-transition-duration $mat-linear-out-slow-in-timing-function;
 }
 
-// .mat-checkbox-checkmark {
-//   @include mat-fill;
-//   @extend %mat-checkbox-mark;
+.mat-checkbox-checkmark {
+  @include mat-fill;
+  @extend %mat-checkbox-mark;
 
-//   width: 100%;
-// }
+  width: 100%;
+}
 
 // .mat-checkbox-checkmark-path {
 //   stroke: {
